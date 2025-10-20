@@ -2,11 +2,14 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <unistd.h>
+#include <string.h>
 
 #include "globals.h"
 #include "load_files.h"
 #include "draw.h"
 #include "loop.h"
+
+#define VERSION "0.2.0"
 
 FileEntry *entries = NULL;
 size_t entry_count = 0;
@@ -23,8 +26,23 @@ size_t scroll_offset = 0;
 int threshold = 3;
 
 // Main
-int main()
+
+int main(int argc, char const *argv[])
 {
+  if (argc > 1)
+  {
+    if (strcmp(argv[1], "--version") == 0 || strcmp(argv[1], "-v") == 0)
+    {
+      printf("nav version %s\n", VERSION);
+      return 0;
+    }
+    else
+    {
+      printf("nav: invalid option: \"%s\"\n", argv[1]);
+      return 0;
+    }
+  }
+
   initscr();
   cbreak();
   noecho();
