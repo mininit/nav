@@ -48,12 +48,10 @@ void loop()
     switch (ch)
     {
     case KEY_UP:
-      if (selected > 0)
-        selected--;
-      else
+      if (selected == 0)
       {
         // wrap to last entry
-        selected = entry_count - 1;
+        selected = entry_count;
         if ((int)entry_count > visible_rows)
           scroll_offset = entry_count - visible_rows;
         if (selected == 0)
@@ -65,6 +63,9 @@ void loop()
           }
         }
       }
+
+      if (selected > 0)
+        selected--;
 
       if (selected < (int)scroll_offset + threshold && scroll_offset > 0)
       {
