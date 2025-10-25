@@ -51,7 +51,7 @@ void loop()
       {
         // wrap to last entry
         selected = entry_count;
-        if ((int)entry_count > visible_rows)
+        if (entry_count > visible_rows)
           scroll_offset = entry_count - visible_rows;
         if (selected == 0)
         {
@@ -66,7 +66,7 @@ void loop()
       if (selected > 0)
         selected--;
 
-      if (selected < (int)scroll_offset + threshold && scroll_offset > 0)
+      if ((size_t)selected < scroll_offset + threshold && scroll_offset > 0)
       {
         scroll_offset--;
       }
@@ -74,16 +74,16 @@ void loop()
 
     case KEY_DOWN:
       // Reset to start if end of entries
-      if (selected + 1 == entry_count)
+      if ((size_t)selected + 1 == entry_count)
       {
         selected = -1;
         scroll_offset = 0;
       }
 
-      if (selected < (int)entry_count - 1)
+      if ((size_t)selected < entry_count - 1)
         selected++;
 
-      if (selected >= (int)(scroll_offset + visible_rows - threshold))
+      if ((size_t)selected >= (scroll_offset + visible_rows - threshold))
       {
         // Only scroll if more entries below
         if (scroll_offset + visible_rows < entry_count)
