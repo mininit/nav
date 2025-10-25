@@ -21,11 +21,11 @@ void draw_lower_window()
 {
   werase(lower_window);
 
-  char selent[20];
+  char selent[64];
   if (entry_count == 0)
-    sprintf(selent, "0 / 0");
+    snprintf(selent, sizeof(selent), "0 / 0");
   else
-    sprintf(selent, "%d / %zu", selected + 1, entry_count);
+    snprintf(selent, sizeof(selent), "%d / %zu", selected + 1, entry_count);
 
   mvwprintw(lower_window, 0, 0, "%s", selent);
   wrefresh(lower_window);
