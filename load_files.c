@@ -13,16 +13,31 @@
 FileType get_file_type(const char *path)
 {
   struct stat st;
-  if (lstat(path, &st) == -1)
+
+  if (lstat(path, &st) != 0)
+    return FILE_REGULAR; // or FILE_UNKNOWN if you prefer
+
+  // Handle symlink separately
+  if (S_ISLNK(st.st_mode))
   {
-    /* Could not stat — treat conservatively as regular file */
-    return FILE_REGULAR;
+    struct stat target;
+    // Try to follow the link
+    if (stat(path, &target) == 0)
+    {
+      if (S_ISDIR(target.st_mode))
+        return FILE_SYMLINK_DIR;
+      else if (S_ISREG(target.st_mode))
+        return FILE_SYMLINK_FILE;
+      else if (target.st_mode & (S_IXUSR | S_IXGRP | S_IXOTH))
+        return FILE_SYMLINK_FILE; // executable symlink target
+    }
+    // If stat fails → broken symlink or dangling target
+    return FILE_BROKEN_SYMLINK;
   }
 
-  if (S_ISLNK(st.st_mode))
-    return FILE_SYMLINK;
   if (S_ISDIR(st.st_mode))
     return FILE_DIR;
+
   if (S_ISREG(st.st_mode))
   {
     if (st.st_mode & (S_IXUSR | S_IXGRP | S_IXOTH))
@@ -42,7 +57,7 @@ void open_in_vim(const char *filepath)
     // Child process: replace with vim
     execlp("vim", "vim", filepath, (char *)NULL);
     // If execlp fails
-    _exit(1);
+    exit(1);
   }
   else if (pid > 0)
   {
@@ -65,14 +80,16 @@ void path_join(char *dest, size_t size, const char *base, const char *child)
     snprintf(dest, size, "%s/%s", base, child);
 }
 
+static int compare_entries(const void *a, const void *b)
+{
+  const FileEntry *ea = (const FileEntry *)a;
+  const FileEntry *eb = (const FileEntry *)b;
+  return strcasecmp(ea->name, eb->name); // or strcmp for case-sensitive
+}
+
 int load_directory(const char *dir_path)
 {
   DIR *dir = opendir(dir_path);
-  if (!dir)
-  {
-    /* perror("opendir"); */
-    return 1;
-  }
 
   // Free old entries
   for (size_t i = 0; i < entry_count; i++)
@@ -81,6 +98,16 @@ int load_directory(const char *dir_path)
   entries = NULL;
   entry_count = 0;
 
+  if (!dir)
+  {
+    // Can't list contents, but still "enter" directory
+    strncpy(cwd, dir_path, sizeof(cwd) - 1);
+    cwd[sizeof(cwd) - 1] = '\0';
+    selected = 0;
+    return 0;
+  }
+
+  // Normal directory reading
   struct dirent *entry;
   while ((entry = readdir(dir)) != NULL)
   {
@@ -90,7 +117,6 @@ int load_directory(const char *dir_path)
     FileEntry *tmp = realloc(entries, sizeof(FileEntry) * (entry_count + 1));
     if (!tmp)
     {
-      /* perror("realloc"); */
       closedir(dir);
       return 1;
     }
@@ -106,11 +132,13 @@ int load_directory(const char *dir_path)
 
   closedir(dir);
 
-  // Keep cwd as the logical path
+  // Sort alphabetically
+  if (entry_count > 1)
+    qsort(entries, entry_count, sizeof(FileEntry), compare_entries);
+
   strncpy(cwd, dir_path, sizeof(cwd) - 1);
   cwd[sizeof(cwd) - 1] = '\0';
-
   selected = 0;
 
   return 0;
-}
+} 

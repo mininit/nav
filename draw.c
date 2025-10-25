@@ -22,13 +22,17 @@ void draw_lower_window()
   werase(lower_window);
 
   char selent[20];
-  sprintf(selent, "%d / %zu", selected + 1, entry_count);
+  if (entry_count == 0)
+    sprintf(selent, "0 / 0");
+  else
+    sprintf(selent, "%d / %zu", selected + 1, entry_count);
 
   mvwprintw(lower_window, 0, 0, "%s", selent);
   wrefresh(lower_window);
 }
 
-void draw_error(){
+void draw_error()
+{
   werase(lower_window);
   mvwprintw(lower_window, 0, 0, "Error");
   wrefresh(lower_window);
@@ -60,7 +64,9 @@ void draw_main_window()
     case FILE_EXEC:
       wattron(main_window, COLOR_PAIR(3));
       break;
-    case FILE_SYMLINK:
+    case FILE_BROKEN_SYMLINK:
+    case FILE_SYMLINK_FILE:
+    case FILE_SYMLINK_DIR:
       wattron(main_window, COLOR_PAIR(4));
       break;
     default:
@@ -83,9 +89,14 @@ void draw_main_window()
       waddstr(main_window, "*");
     }
 
-    if (entries[i].type == FILE_SYMLINK)
+    if (entries[i].type == FILE_SYMLINK_FILE || entries[i].type == FILE_BROKEN_SYMLINK)
     {
       waddstr(main_window, "@");
+    }
+
+    if (entries[i].type == FILE_SYMLINK_DIR)
+    {
+      waddstr(main_window, "/");
     }
   }
 
