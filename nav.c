@@ -9,8 +9,6 @@
 #include "draw.h"
 #include "loop.h"
 
-#define VERSION "0.2.0"
-
 FileEntry *entries = NULL;
 size_t entry_count = 0;
 int selected = 0;

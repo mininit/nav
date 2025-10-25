@@ -1,5 +1,4 @@
 #include <string.h>
-#include <sys/wait.h>
 #include <sys/stat.h>
 #include <unistd.h>
 #include <stdlib.h>
@@ -96,6 +95,8 @@ void loop()
     case KEY_RIGHT:
     case 'e':
     {
+      if (entry_count == 0)
+        break;
       push_history(selected, scroll_offset);
 
       char new_path[PATH_MAX];

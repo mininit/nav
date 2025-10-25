@@ -6,9 +6,11 @@
 typedef enum
 {
   FILE_REGULAR,
+  FILE_EXEC,
   FILE_DIR,
-  FILE_SYMLINK,
-  FILE_EXEC
+  FILE_SYMLINK_FILE,
+  FILE_SYMLINK_DIR,
+  FILE_BROKEN_SYMLINK
 } FileType;
 
 typedef struct
