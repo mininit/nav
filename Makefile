@@ -6,7 +6,7 @@ LDLIBS  ?= -lncurses
 TARGET  = nav
 SRC     = nav.c draw.c load_files.c loop.c
 
-VERSION ?= $(shell git describe --tags --always 2>/dev/null || echo "0.0.0")
+VERSION ?= $(shell git describe --tags --always --dirty 2>/dev/null | sed 's/^v//' || echo "0.0.0")
 CFLAGS  += -DVERSION="\"$(VERSION)\""
 
 PREFIX  ?= /usr/local
