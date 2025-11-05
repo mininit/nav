@@ -74,20 +74,22 @@ void loop()
 
     case KEY_DOWN:
       // Reset to start if end of entries
-      if ((size_t)selected + 1 == entry_count)
+      if ((size_t)selected == entry_count - 1)
       {
-        selected = -1;
+        selected = 0;
         scroll_offset = 0;
       }
-
-      if ((size_t)selected < entry_count - 1)
-        selected++;
-
-      if ((size_t)selected >= (scroll_offset + visible_rows - threshold))
+      else
       {
-        // Only scroll if more entries below
-        if (scroll_offset + visible_rows < entry_count)
-          scroll_offset++;
+        if ((size_t)selected < entry_count - 1)
+          selected++;
+
+        if ((size_t)selected >= (scroll_offset + visible_rows - threshold))
+        {
+          // Only scroll if more entries below
+          if (scroll_offset + visible_rows < entry_count)
+            scroll_offset++;
+        }
       }
       break;
 
