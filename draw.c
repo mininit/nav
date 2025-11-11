@@ -11,26 +11,23 @@ WINDOW *main_window = NULL;
 WINDOW *upper_window = NULL;
 WINDOW *lower_window = NULL;
 
-void add_suffix(int i)
+static void add_suffix(int i)
 {
-  if (entries[i].type == FILE_DIR)
+  switch (entries[i].type)
   {
-    waddstr(main_window, "/");
-  }
-
-  if (entries[i].type == FILE_EXEC)
-  {
-    waddstr(main_window, "*");
-  }
-
-  if (entries[i].type == FILE_SYMLINK_FILE || entries[i].type == FILE_BROKEN_SYMLINK)
-  {
-    waddstr(main_window, "@");
-  }
-
-  if (entries[i].type == FILE_SYMLINK_DIR)
-  {
-    waddstr(main_window, "/");
+  case FILE_DIR:
+  case FILE_SYMLINK_DIR:
+    waddch(main_window, '/');
+    break;
+  case FILE_EXEC:
+    waddch(main_window, '*');
+    break;
+  case FILE_SYMLINK_FILE:
+  case FILE_BROKEN_SYMLINK:
+    waddch(main_window, '@');
+    break;
+  default:
+    break;
   }
 }
 
@@ -53,8 +50,9 @@ void init_draw()
 
   int max_y, max_x;
   getmaxyx(stdscr, max_y, max_x);
-  main_window = newwin(max_y - 2, max_x, 1, 0);
+
   upper_window = newwin(1, max_x, 0, 0);
+  main_window = newwin(max_y - 2, max_x, 1, 0);
   lower_window = newwin(1, max_x, max_y - 1, 0);
 }
 
@@ -64,21 +62,14 @@ static void draw_upper_window()
   wattron(upper_window, COLOR_PAIR(2));
   mvwprintw(upper_window, 0, 0, "%s", cwd);
   wattroff(upper_window, COLOR_PAIR(2));
-
   wrefresh(upper_window);
 }
 
 static void draw_lower_window()
 {
   werase(lower_window);
-
-  char selent[64];
-  if (entry_count == 0)
-    snprintf(selent, sizeof(selent), "0 / 0");
-  else
-    snprintf(selent, sizeof(selent), "%d / %zu", selected + 1, entry_count);
-
-  mvwprintw(lower_window, 0, 0, "%s", selent);
+  mvwprintw(lower_window, 0, 0, "%d / %zu",
+            entry_count ? selected + 1 : 0, entry_count);
   wrefresh(lower_window);
 }
 
@@ -92,6 +83,8 @@ void draw_error()
 static void draw_main_window()
 {
   werase(main_window);
+  getmaxyx(main_window, win_h, win_w);
+  visible_rows = win_h - 2;
 
   size_t end = scroll_offset + visible_rows;
   if (end > entry_count)
@@ -101,11 +94,11 @@ static void draw_main_window()
   {
     int y = (int)(i - scroll_offset) + 1;
 
-    // Highlight the selected line for the filename
+    // highlight if selected
     if ((int)i == selected)
       wattron(main_window, A_REVERSE);
 
-    // Set color for main filename
+    // color by type
     switch (entries[i].type)
     {
     case FILE_DIR:
@@ -114,41 +107,30 @@ static void draw_main_window()
     case FILE_EXEC:
       wattron(main_window, COLOR_PAIR(3));
       break;
-    case FILE_BROKEN_SYMLINK:
     case FILE_SYMLINK_FILE:
     case FILE_SYMLINK_DIR:
+    case FILE_BROKEN_SYMLINK:
       wattron(main_window, COLOR_PAIR(4));
       break;
     default:
       break;
     }
 
-    // Print the filename
     mvwprintw(main_window, y, 1, "%s", entries[i].name);
-
-    // Turn off color & highlight for filename
     wattroff(main_window, A_REVERSE | COLOR_PAIR(2) | COLOR_PAIR(3) | COLOR_PAIR(4));
-
     add_suffix(i);
   }
 
-  if (scroll_offset >= 1)
-  {
+  if (scroll_offset > 0)
     mvwprintw(main_window, 0, 1, "...");
-  }
-
   if (entry_count > visible_rows && scroll_offset < entry_count - visible_rows)
-  {
     mvwprintw(main_window, win_h - 1, 1, "...");
-  }
 
   wrefresh(main_window);
 }
 
 void draw_entries()
 {
-  getmaxyx(main_window, win_h, win_w);
-  visible_rows = win_h - 2;
   draw_main_window();
   draw_upper_window();
   draw_lower_window();
