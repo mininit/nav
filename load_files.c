@@ -50,7 +50,6 @@ FileType get_file_type(const char *path)
 
 void open_in_vim(const char *filepath)
 {
-
   pid_t pid = fork();
   if (pid == 0)
   {
@@ -141,4 +140,10 @@ int load_directory(const char *dir_path)
   selected = 0;
 
   return 0;
-} 
+}
+
+bool is_dir(const char *path)
+{
+  struct stat st;
+  return (stat(path, &st) == 0 && S_ISDIR(st.st_mode));
+}

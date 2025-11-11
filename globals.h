@@ -23,9 +23,6 @@ extern FileEntry *entries;
 extern size_t entry_count;
 extern int selected;
 extern char cwd[1024];
-extern WINDOW *main_window;
-extern WINDOW *upper_window;
-extern WINDOW *lower_window;
 
 extern size_t scroll_offset;
 

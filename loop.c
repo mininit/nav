@@ -37,6 +37,12 @@ void push_history(int selected, int scroll_offset)
   history[history_index++] = (HistoryEntry){selected, scroll_offset};
 }
 
+void reset_selected()
+{
+  selected = 0;
+  scroll_offset = 0;
+}
+
 void loop()
 {
   int ch;
@@ -76,8 +82,7 @@ void loop()
       // Reset to start if end of entries
       if ((size_t)selected == entry_count - 1)
       {
-        selected = 0;
-        scroll_offset = 0;
+        reset_selected();
       }
       else
       {
@@ -104,39 +109,12 @@ void loop()
       char new_path[PATH_MAX];
       path_join(new_path, sizeof(new_path), cwd, entries[selected].name);
 
-      struct stat st;
-      int is_dir = 0;
-
-      // Check if it's a symlink pointing to a directory
-      if (lstat(new_path, &st) == 0)
-      {
-        if (S_ISDIR(st.st_mode))
-        {
-          is_dir = 1;
-        }
-        else if (S_ISLNK(st.st_mode))
-        {
-          // Follow symlink target to see if it's a directory
-          char target[PATH_MAX];
-          ssize_t len = readlink(new_path, target, sizeof(target) - 1);
-          if (len != -1)
-          {
-            target[len] = '\0';
-            if (stat(new_path, &st) == 0 && S_ISDIR(st.st_mode))
-            {
-              is_dir = 1;
-            }
-          }
-        }
-      }
-
-      if (is_dir)
+      if (is_dir(new_path))
       {
         // Enter directory (or symlink to directory)
         if (load_directory(new_path) == 0)
         {
-          selected = 0;
-          scroll_offset = 0;
+          reset_selected();
         }
         else
         {
@@ -178,8 +156,7 @@ void loop()
       }
       else
       {
-        selected = 0;
-        scroll_offset = 0;
+        reset_selected();
       }
 
       break;
@@ -187,8 +164,7 @@ void loop()
 
     case 'H':
     {
-      selected = 0;
-      scroll_offset = 0;
+      reset_selected();
       break;
     }
 

@@ -1,4 +1,3 @@
-#include <ncurses.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <unistd.h>
@@ -13,9 +12,6 @@ FileEntry *entries = NULL;
 size_t entry_count = 0;
 int selected = 0;
 char cwd[1024];
-WINDOW *main_window = NULL;
-WINDOW *upper_window = NULL;
-WINDOW *lower_window = NULL;
 
 int max_y, max_x;
 
@@ -25,42 +21,28 @@ int threshold = 3;
 
 // Main
 
-int main(int argc, char const *argv[])
+void handle_args(int argc, char const *argv[])
 {
   if (argc > 1)
   {
     if (strcmp(argv[1], "--version") == 0 || strcmp(argv[1], "-v") == 0)
     {
       printf("nav version %s\n", VERSION);
-      return 0;
+      exit(0);
     }
     else
     {
       printf("nav: invalid option: \"%s\"\n", argv[1]);
-      return 0;
+      exit(0);
     }
   }
+}
 
-  initscr();
-  cbreak();
-  noecho();
-  curs_set(0);
-  keypad(stdscr, TRUE);
+int main(int argc, char const *argv[])
+{
+  handle_args(argc, argv);
 
-  if (has_colors())
-  {
-    start_color();
-    use_default_colors();
-    init_pair(2, COLOR_CYAN, -1);    // directories
-    init_pair(3, COLOR_GREEN, -1);   // executables
-    init_pair(4, COLOR_MAGENTA, -1); // symlinks
-  }
-
-  int max_y, max_x;
-  getmaxyx(stdscr, max_y, max_x);
-  main_window = newwin(max_y - 2, max_x, 1, 0);
-  upper_window = newwin(1, max_x, 0, 0);
-  lower_window = newwin(1, max_x, max_y - 1, 0);
+  init_draw();
 
   if (!getcwd(cwd, sizeof(cwd)))
   {
@@ -78,9 +60,8 @@ int main(int argc, char const *argv[])
   for (size_t i = 0; i < entry_count; i++)
     free(entries[i].name);
   free(entries);
-  delwin(main_window);
-  delwin(upper_window);
-  delwin(lower_window);
-  endwin();
+
+  end_draw();
+
   return 0;
 }

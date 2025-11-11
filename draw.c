@@ -7,7 +7,58 @@
 int win_h, win_w;
 size_t visible_rows;
 
-void draw_upper_window()
+WINDOW *main_window = NULL;
+WINDOW *upper_window = NULL;
+WINDOW *lower_window = NULL;
+
+void add_suffix(int i)
+{
+  if (entries[i].type == FILE_DIR)
+  {
+    waddstr(main_window, "/");
+  }
+
+  if (entries[i].type == FILE_EXEC)
+  {
+    waddstr(main_window, "*");
+  }
+
+  if (entries[i].type == FILE_SYMLINK_FILE || entries[i].type == FILE_BROKEN_SYMLINK)
+  {
+    waddstr(main_window, "@");
+  }
+
+  if (entries[i].type == FILE_SYMLINK_DIR)
+  {
+    waddstr(main_window, "/");
+  }
+}
+
+void init_draw()
+{
+  initscr();
+  cbreak();
+  noecho();
+  curs_set(0);
+  keypad(stdscr, TRUE);
+
+  if (has_colors())
+  {
+    start_color();
+    use_default_colors();
+    init_pair(2, COLOR_CYAN, -1);    // directories
+    init_pair(3, COLOR_GREEN, -1);   // executables
+    init_pair(4, COLOR_MAGENTA, -1); // symlinks
+  }
+
+  int max_y, max_x;
+  getmaxyx(stdscr, max_y, max_x);
+  main_window = newwin(max_y - 2, max_x, 1, 0);
+  upper_window = newwin(1, max_x, 0, 0);
+  lower_window = newwin(1, max_x, max_y - 1, 0);
+}
+
+static void draw_upper_window()
 {
   werase(upper_window);
   wattron(upper_window, COLOR_PAIR(2));
@@ -17,7 +68,7 @@ void draw_upper_window()
   wrefresh(upper_window);
 }
 
-void draw_lower_window()
+static void draw_lower_window()
 {
   werase(lower_window);
 
@@ -38,9 +89,8 @@ void draw_error()
   wrefresh(lower_window);
 }
 
-void draw_main_window()
+static void draw_main_window()
 {
-
   werase(main_window);
 
   size_t end = scroll_offset + visible_rows;
@@ -79,25 +129,7 @@ void draw_main_window()
     // Turn off color & highlight for filename
     wattroff(main_window, A_REVERSE | COLOR_PAIR(2) | COLOR_PAIR(3) | COLOR_PAIR(4));
 
-    if (entries[i].type == FILE_DIR)
-    {
-      waddstr(main_window, "/");
-    }
-
-    if (entries[i].type == FILE_EXEC)
-    {
-      waddstr(main_window, "*");
-    }
-
-    if (entries[i].type == FILE_SYMLINK_FILE || entries[i].type == FILE_BROKEN_SYMLINK)
-    {
-      waddstr(main_window, "@");
-    }
-
-    if (entries[i].type == FILE_SYMLINK_DIR)
-    {
-      waddstr(main_window, "/");
-    }
+    add_suffix(i);
   }
 
   if (scroll_offset >= 1)
@@ -120,4 +152,12 @@ void draw_entries()
   draw_main_window();
   draw_upper_window();
   draw_lower_window();
+}
+
+void end_draw()
+{
+  delwin(main_window);
+  delwin(upper_window);
+  delwin(lower_window);
+  endwin();
 }

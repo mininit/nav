@@ -7,5 +7,6 @@ FileType get_file_type(const char *path);
 void open_in_vim(const char *filepath);
 void path_join(char *dest, size_t size, const char *base, const char *child);
 int load_directory(const char *dir_path);
+bool is_dir(const char* new_path);
 
 #endif // LOAD_FILE_H
