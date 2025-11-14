@@ -1,9 +1,12 @@
 # nav
 
+## Preview
+![](https://download.mininit.com/images/nav.png)
+
+## Overview
 **nav** is a lightweight terminal-based file navigator built with `ncurses`. It allows you to browse directories, follow symlinks, and open files directly in `vim`.
 
 ## Features
-
 - Navigate directories in a TUI interface.
 - Supports directory symlinks.
 - Open files in `vim` without leaving the program permanently.
